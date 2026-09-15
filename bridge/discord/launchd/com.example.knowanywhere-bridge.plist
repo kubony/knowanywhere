@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  launchd template for running the Discord bridge on macOS (per-user LaunchAgent).
+
+  How to fill it in:
+  1. Pick a label, for example com.yourname.knowanywhere-bridge, and use it for the file name and <Label>.
+  2. Replace every /ABSOLUTE/PATH/TO/bridge/discord with the absolute path of this folder (`pwd` inside it).
+  3. Replace /ABSOLUTE/PATH/TO/node with the output of `command -v node` (Homebrew on Apple silicon: /opt/homebrew/bin/node).
+  4. Replace /Users/YOUR_USER with your home directory (`echo $HOME`). The agent needs HOME to find the
+     `claude` login (~/.claude) or the codex config (~/.codex).
+  5. Keep ENV_FILE pointing at the env file of this bot (.env, or .env.second-agent for a second bot).
+  6. Make sure the logs/ folder exists: mkdir -p /ABSOLUTE/PATH/TO/bridge/discord/logs
+
+  Install and control (replace LABEL with your label):
+    cp launchd/com.example.knowanywhere-bridge.plist ~/Library/LaunchAgents/LABEL.plist
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/LABEL.plist    # load and start
+    launchctl kickstart -k gui/$(id -u)/LABEL                              # restart after code or .env changes
+    launchctl bootout gui/$(id -u)/LABEL                                   # stop and unload
+    tail -f /ABSOLUTE/PATH/TO/bridge/discord/logs/bridge.log /ABSOLUTE/PATH/TO/bridge/discord/logs/bridge.err.log
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.example.knowanywhere-bridge</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/ABSOLUTE/PATH/TO/node</string>
+    <string>/ABSOLUTE/PATH/TO/bridge/discord/src/index.js</string>
+  </array>
+  <key>WorkingDirectory</key><string>/ABSOLUTE/PATH/TO/bridge/discord</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key><string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    <key>HOME</key><string>/Users/YOUR_USER</string>
+    <key>ENV_FILE</key><string>/ABSOLUTE/PATH/TO/bridge/discord/.env</string>
+  </dict>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>ThrottleInterval</key><integer>10</integer>
+  <key>StandardOutPath</key><string>/ABSOLUTE/PATH/TO/bridge/discord/logs/bridge.log</string>
+  <key>StandardErrorPath</key><string>/ABSOLUTE/PATH/TO/bridge/discord/logs/bridge.err.log</string>
+</dict>
+</plist>

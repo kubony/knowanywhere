@@ -1,0 +1,23 @@
+# Caddy terminates TLS for the wiki and proxies everything to Outline.
+# {$WIKI_HOST} comes from the container environment (docker-compose.yml passes it from .env).
+#
+# Automatic HTTPS: Caddy requests a Let's Encrypt certificate for WIKI_HOST on start and renews it.
+# It needs (1) DNS for WIKI_HOST pointing at this VM and (2) ports 80 and 443 open to the internet.
+#
+# sslip.io: the same config works unchanged. A host such as wiki-203-0-113-10.sslip.io resolves to
+# 203.0.113.10 through sslip.io's public DNS, so Let's Encrypt can validate it like any other name.
+#
+# Outline's own HTTPS redirect stays off (FORCE_HTTPS=false in .env). Caddy already redirects
+# http -> https; letting Outline redirect too causes a redirect loop.
+
+{$WIKI_HOST} {
+	encode zstd gzip
+
+	# Attachments and imports can be slow; give the proxy generous timeouts.
+	reverse_proxy outline:3000 {
+		transport http {
+			read_timeout 300s
+			write_timeout 300s
+		}
+	}
+}

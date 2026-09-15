@@ -1,0 +1,24 @@
+node_modules/
+
+# Secrets: real env files stay on the machine that runs the bridge (chmod 600).
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Your rendered persona (the shipped template is persona.example.md).
+persona*.md
+!persona.example.md
+!persona.example.*.md
+
+# Runtime state
+workspace/
+sessions.json
+sessions.json.tmp
+sessions.*.json
+sessions.*.json.tmp
+logs/
+*.log
+
+.DS_Store
+.worktrees/

@@ -1,0 +1,8 @@
+[
+  {
+    "origin": ["https://wiki.example.com"],
+    "method": ["GET", "HEAD", "PUT", "POST"],
+    "responseHeader": ["Content-Type", "Content-Disposition", "Content-Length", "ETag", "x-goog-resumable"],
+    "maxAgeSeconds": 3600
+  }
+]

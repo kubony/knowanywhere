@@ -1,0 +1,9 @@
+.knowanywhere/
+.env
+.env.*
+!.env.example
+node_modules/
+sessions*.json
+workspace/
+logs/
+.DS_Store

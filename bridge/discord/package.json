@@ -1,0 +1,26 @@
+{
+  "name": "knowanywhere-discord-bridge",
+  "version": "1.0.0",
+  "description": "Discord bridge for Claude Code (Agent SDK) and Codex agents: one message, one thread, one agent session",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "start:second": "ENV_FILE=.env.second-agent node src/index.js",
+    "smoke": "node scripts/smoke.js",
+    "test:threads": "node scripts/thread-test.mjs",
+    "test:context": "node scripts/context-test.mjs",
+    "test:codex": "node scripts/codex-runner-test.mjs",
+    "test": "npm run test:threads && npm run test:context && npm run test:codex"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.3.259",
+    "discord.js": "^14.27.0",
+    "dotenv": "^17.4.2",
+    "zod": "^4.4.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

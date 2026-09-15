@@ -1,0 +1,114 @@
+# Outline on one VM: Caddy (TLS) -> outline:3000 -> postgres + redis. Attachments live in GCS.
+# Lives in /opt/outline on the VM next to Caddyfile and .env (created by install.sh, mode 600).
+# All values come from .env; nothing secret is written in this file.
+#
+# Upgrade the Outline version with ./upgrade.sh <new-tag>; it edits the image line below.
+
+# Fixed project name, so volumes are always outline_pgdata, outline_redisdata, ... whatever the directory.
+name: outline
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  caddy:
+    image: caddy:2.11-alpine
+    container_name: outline-caddy
+    restart: unless-stopped
+    depends_on:
+      - outline
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # Read by the Caddyfile as {$WIKI_HOST}.
+      WIKI_HOST: ${WIKI_HOST:?WIKI_HOST must be set in .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    healthcheck:
+      # Caddy's admin API listens on 127.0.0.1:2019 inside the container only.
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:2019/config/"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    logging: *default-logging
+    networks:
+      - internal
+
+  outline:
+    # Pinned: v1.10.1 (2026-09-09). Check https://github.com/outline/outline/releases before bumping.
+    image: outlinewiki/outline:1.10.1
+    container_name: outline
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file: .env
+    # The image's default CMD (node build/server/index.js) runs pending migrations on boot.
+    # upgrade.sh still runs them explicitly first so a failing migration shows up before the restart:
+    #   docker compose run --rm --entrypoint sh outline \
+    #     -c "node_modules/.bin/sequelize db:migrate --env=production-ssl-disabled"
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/_health | grep -q OK"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      # The first boot runs every migration and can take a few minutes on an e2-medium.
+      start_period: 180s
+    logging: *default-logging
+    networks:
+      - internal
+
+  postgres:
+    # Major version pinned: a dump restores cleanly only into the same or a newer major.
+    image: postgres:16-alpine
+    container_name: outline-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: outline
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
+      POSTGRES_DB: outline
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U outline -d outline"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    logging: *default-logging
+    networks:
+      - internal
+
+  redis:
+    image: redis:7-alpine
+    container_name: outline-redis
+    restart: unless-stopped
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    logging: *default-logging
+    networks:
+      - internal
+
+volumes:
+  pgdata:
+  redisdata:
+  caddy_data:
+  caddy_config:
+
+networks:
+  internal:
