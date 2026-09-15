@@ -1,6 +1,6 @@
 ---
 name: kna-03-vm
-description: fresh 모드에서 kna-01-gcp-account(와 kna-02-budget 또는 그 건너뛰기)가 끝난 뒤 knowanywhere 03단계를 진행할 때 쓴다. 프로젝트 역할이 없는 전용 서비스 계정 outline-vm 을 만들고, 고정 IP 를 예약하고, 방화벽 80/443 을 열고, outline-vm 을 --scopes=cloud-platform 으로 붙인 e2-medium Debian 12 30GB pd-balanced VM 을 만든 뒤 SSH 로 패키지 업데이트, 시간대, 2GB swap 과 vm.swappiness=10, Docker Engine 과 compose plugin 설치를 한다.
+description: fresh 모드에서 kna-01-gcp-account(와 kna-02-budget 또는 그 건너뛰기)가 끝난 뒤 knowanywhere 03단계를 진행할 때 쓴다. 프로젝트 역할이 없는 전용 서비스 계정 outline-vm 을 만들고, 고정 IP 를 예약하고, 방화벽 80/443 을 열고, outline-vm 을 --scopes=cloud-platform 으로 붙인 e2-medium Debian 12 30GB pd-balanced VM 을 만든 뒤 SSH 로 패키지 업데이트, 시간대, 2GB swap 과 vm.swappiness=10, Docker Engine 과 compose plugin 설치를 한다. 끝으로 default 네트워크의 자동 규칙 default-allow-rdp 삭제를 제안한다.
 ---
 
 # 03단계: VM
@@ -40,6 +40,7 @@ node .claude/skills/kna-status/state.mjs get gcp
    | 서비스 계정 `outline-vm` | 무료 |
 
    체험 기간에는 무료 크레딧에서 나간다. 가격은 리전마다 다르고 바뀐다.
+4. `default-allow-rdp` 방화벽 규칙을 지울지(절차 8). 삭제를 권한다. 절차 8에 닿았을 때 묻는다.
 
 ## 절차
 
@@ -105,8 +106,7 @@ gcloud compute firewall-rules create default-allow-https --project=P --network=d
 ### 5. VM 만들기 (돈이 든다: 묻는다)
 
 ```bash
-gcloud compute instances create kna-wiki-vm \
-  --project=P --zone=Z \
+gcloud compute instances create kna-wiki-vm --project=P --zone=Z \
   --machine-type=e2-medium \
   --image-family=debian-12 --image-project=debian-cloud \
   --boot-disk-size=30GB --boot-disk-type=pd-balanced \
@@ -123,6 +123,8 @@ gcloud compute instances create kna-wiki-vm \
 기대 출력: `STATUS` 가 `RUNNING` 이고 `EXTERNAL_IP` 가 예약한 주소인 행.
 `Quota 'CPUS' exceeded` 나 `ZONE_RESOURCE_POOL_EXHAUSTED` 는 같은 region 의 다른 zone(`-b`, `-c`)으로 다시 시도한다.
 서비스 계정이 `not found` 로 나오면 2에서 방금 만든 계정이 아직 전파되지 않은 것이다. 30초 뒤 다시 한다.
+`Disk size: '30 GB' is larger than image size: '10 GB'` 경고는 무해하다. Debian 12 이미지는 첫 부팅 때 파일시스템을
+디스크 크기로 자동 확장한다. 사용자에게 한 줄로 그렇게 알린다.
 
 ### 6. 첫 SSH (SSH 키가 만들어진다)
 
@@ -133,7 +135,7 @@ gcloud compute ssh kna-wiki-vm --project=P --zone=Z --quiet --command='whoami &&
 ```
 
 `--quiet` 는 gcloud 가 `~/.ssh/google_compute_engine` 을 passphrase 질문 없이 만들게 한다(도구 호출은 질문에 답할 수
-없다). passphrase 를 원하면 사용자가 자기 터미널에서 `gcloud compute ssh kna-wiki-vm --zone=Z` 를 먼저 한 번 실행하게
+없다). passphrase 를 원하면 사용자가 자기 터미널에서 `gcloud compute ssh kna-wiki-vm --project=P --zone=Z` 를 먼저 한 번 실행하게
 한다. `whoami` 가 출력한 첫 줄이 `vm.ssh_user` 다. SSH 가 timeout 이면 1분 기다렸다 다시 한다.
 
 ### 7. SSH 로 기본 설정
@@ -160,6 +162,30 @@ gcloud compute ssh kna-wiki-vm --project=P --zone=Z --command='if ! sudo swapon 
 gcloud compute ssh kna-wiki-vm --project=P --zone=Z --command='command -v docker >/dev/null || (curl -fsSL https://get.docker.com -o /tmp/get-docker.sh && sudo sh /tmp/get-docker.sh); sudo usermod -aG docker "$USER"'
 ```
 
+### 8. 기본 방화벽 규칙 정리
+
+Compute Engine API 를 켤 때 만들어진 `default` 네트워크에는 자동 규칙이 딸려 온다. 규칙 목록을 다시 보여준다.
+
+```bash
+gcloud compute firewall-rules list --project=P --filter="network~/default$" \
+  --format="table(name,direction,sourceRanges.list(),allowed[].map().firewall_rule().list(),targetTags.list())"
+```
+
+- `default-allow-rdp`(tcp:3389, 소스 `0.0.0.0/0`)는 Windows 원격 데스크톱용이다. Debian VM 에는 쓸 데가 없고 인터넷
+  전체에 열려 있으므로 **삭제를 제안한다**. 지우는 일이므로 아래 명령을 보여주고 yes 를 받은 뒤 실행한다. 거절하면
+  그대로 두고 넘어간다.
+
+  ```bash
+  gcloud compute firewall-rules delete default-allow-rdp --project=P --quiet
+  ```
+
+  `--quiet` 는 gcloud 의 확인 질문을 건너뛴다(도구 호출은 질문에 답할 수 없다). 사용자의 yes 가 그 확인을 대신한다.
+- `default-allow-ssh`(tcp:22, 소스 `0.0.0.0/0`)는 이 단계와 06·10·11단계가 `gcloud compute ssh` 로 VM 에 들어갈 때
+  쓰므로 기본으로 남긴다. 키 인증만 받으므로 비밀번호 추측 공격은 통하지 않는다. 더 조이고 싶다는 사용자에게는
+  `docs/steps/03-vm.md` 의 "SSH 를 IAP 로 좁히기 (선택)"를 알려주고, 이후 단계의 `ssh`·`scp` 명령마다
+  `--tunnel-through-iap` 를 붙여야 하므로 11단계까지 마친 뒤 하기를 권한다.
+- `default-allow-icmp`(ping), `default-allow-internal`(VPC 내부 대역)은 그대로 둔다.
+
 ### 기존 VM 의 서비스 계정 바꾸기 (1에서 필요할 때만)
 
 이전 실행이나 콘솔에서 만든 VM 이 기본 Compute 서비스 계정을 쓰고 있으면 `outline-vm` 으로 바꾼다. VM 을 멈춰야 하므로
@@ -184,10 +210,12 @@ gcloud iam service-accounts delete outline-vm@P.iam.gserviceaccount.com --projec
 
 ## 검증
 
+검증 명령과 도구 호출의 출력은 요약하지 말고 fenced code block 으로 원문을 붙이고, 그 아래 한 줄로 기대 결과와 맞는지 판정한다.
+
 새 SSH 세션은 docker 그룹을 반영하므로, 이 명령은 사용자가 sudo 없이 Docker 를 쓸 수 있다는 것도 확인한다.
 
 ```bash
-gcloud compute ssh kna-wiki-vm --project=P --zone=Z --command='docker --version && docker compose version && docker run --rm hello-world | grep -m1 "Hello from Docker" && free -h && swapon --show && cat /proc/sys/vm/swappiness && timedatectl | grep "Time zone"'
+gcloud compute ssh kna-wiki-vm --project=P --zone=Z --command='docker --version && docker compose version && docker run --rm hello-world | grep -m1 "Hello from Docker" && free -h && sudo swapon --show && cat /proc/sys/vm/swappiness && timedatectl | grep "Time zone"'
 ```
 
 기대 출력: Docker 와 Compose 버전, `Hello from Docker!`, 약 `2.0Gi` 인 `Swap:` 줄, `/swapfile` 항목, `10`, 고른 시간대.
@@ -210,14 +238,23 @@ gcloud projects get-iam-policy P --flatten="bindings[].members" --filter="bindin
 (`gcloud projects remove-iam-policy-binding P --member=serviceAccount:outline-vm@P.iam.gserviceaccount.com --role=<역할>`)을
 보여준 뒤 yes 를 받고 실행한다. 위 결과가 모두 맞기 전에는 단계를 done 으로 쓰지 않는다.
 
+### 문제 해결
+
+| 증상 | 조치 |
+|---|---|
+| VM 생성 때 `Disk size: '30 GB' is larger than image size: '10 GB'` 경고 | 무해하다. Debian 12 는 첫 부팅 때 파일시스템을 30 GB 로 자동 확장한다. 그대로 진행한다 |
+| `bash: line 1: swapon: command not found` | Debian 12 의 `swapon` 은 `/usr/sbin` 에 있어 일반 사용자 PATH 에 없다. `sudo swapon --show` 로 실행한다 |
+| `Quota 'CPUS' exceeded` 또는 `ZONE_RESOURCE_POOL_EXHAUSTED` | 같은 region 의 `-b`, `-c` zone 으로 다시 한다 |
+| 서비스 계정 `not found` | 방금 만든 `outline-vm` 이 아직 전파되지 않았다. 30초 뒤 다시 한다 |
+
 ## state에 쓸 것
+
+`state.mjs` 가 출력한 JSON 조각을 fenced code block 으로 그대로 보여준다.
 
 ```bash
 node .claude/skills/kna-status/state.mjs set '{"vm":{"name":"kna-wiki-vm","zone":"asia-northeast3-a","ip":"203.0.113.10","ssh_user":"rose","service_account":"outline-vm@kna-wiki-a1b2.iam.gserviceaccount.com"}}'
 node .claude/skills/kna-status/state.mjs step 03 done
 ```
-
-출력된 조각을 보여준다.
 
 ## 다음 단계
 

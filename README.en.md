@@ -138,6 +138,12 @@ mode 600. The installer never prints a secret back, never writes one to its stat
 wiki, and refers to secrets only by variable name and last four characters. More in
 [docs/architecture.md](docs/architecture.md) (Korean).
 
+## Verification history
+
+- 2026-09-15 · Steps 00 to 04 were run end to end through the installer on a new GCP project (Workspace account,
+  Seoul region, sslip.io) and passed. Steps 05 to 11 have only had a local Docker smoke test (Outline 1.10.1 starts,
+  `/_health` returns 200); they have not yet been run on real GCP.
+
 ## License
 
 [MIT](LICENSE)

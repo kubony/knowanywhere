@@ -35,7 +35,7 @@ Compute 서비스 계정을 쓰고 있으면 이 권한을 더해도 VM 의 권�
 한다(VM 을 몇 분 멈춘다).
 
 ```bash
-gcloud storage buckets add-iam-policy-binding gs://kna-wiki-a1b2-backups --member=serviceAccount:outline-vm@kna-wiki-a1b2.iam.gserviceaccount.com --role=roles/storage.objectCreator
+gcloud storage buckets add-iam-policy-binding gs://kna-wiki-a1b2-backups --project=kna-wiki-a1b2 --member=serviceAccount:outline-vm@kna-wiki-a1b2.iam.gserviceaccount.com --role=roles/storage.objectCreator
 ```
 
 **3. 덤프 스크립트와 cron.** `deploy/outline/pg-backup.sh` 를 VM 의 `/usr/local/bin/outline-pg-backup` 으로 설치하고
@@ -53,7 +53,7 @@ gcloud storage buckets add-iam-policy-binding gs://kna-wiki-a1b2-backups --membe
 
 ```bash
 gcloud compute ssh kna-wiki-vm --project=kna-wiki-a1b2 --zone=asia-northeast3-a --command='sudo /usr/local/bin/outline-pg-backup'
-gcloud storage ls -l gs://kna-wiki-a1b2-backups/postgres/
+gcloud storage ls -l gs://kna-wiki-a1b2-backups/postgres/ --project=kna-wiki-a1b2
 ```
 
 ```
@@ -92,8 +92,8 @@ VM 은 backups 버킷을 읽을 수 없으므로(쓰기만 된다) 노트북에�
 수 있는가"를 확인하는 부분이다. 덤프에는 위키 내용 전부가 들어 있으니 끝나면 지운다.
 
 ```bash
-gcloud storage ls gs://kna-wiki-a1b2-backups/postgres/ | tail -1
-gcloud storage cp gs://kna-wiki-a1b2-backups/postgres/outline-20260916-183000.sql.gz .
+gcloud storage ls gs://kna-wiki-a1b2-backups/postgres/ --project=kna-wiki-a1b2 | tail -1
+gcloud storage cp gs://kna-wiki-a1b2-backups/postgres/outline-20260916-183000.sql.gz . --project=kna-wiki-a1b2
 gcloud compute ssh kna-wiki-vm --project=kna-wiki-a1b2 --zone=asia-northeast3-a --command='mkdir -p ~/outline-drill'
 gcloud compute scp --project=kna-wiki-a1b2 --zone=asia-northeast3-a outline-20260916-183000.sql.gz kna-wiki-vm:~/outline-drill/
 rm outline-20260916-183000.sql.gz
@@ -234,9 +234,9 @@ gcloud compute disks add-resource-policies kna-wiki-vm-restored --project=kna-wi
 ```
 
 마지막 줄은 새 디스크에도 매일 스냅샷을 붙인다. 위키가 되살아난 것을 확인한 뒤 옛 디스크 `kna-wiki-vm` 을 지운다
-(`gcloud compute disks delete kna-wiki-vm --zone=asia-northeast3-a`). 붙어 있지 않은 디스크도 요금이 나간다.
+(`gcloud compute disks delete kna-wiki-vm --project=kna-wiki-a1b2 --zone=asia-northeast3-a`). 붙어 있지 않은 디스크도 요금이 나간다.
 
-VM 자체를 지웠다면 `gcloud compute instances create` 에 `--disk=name=kna-wiki-vm-restored,boot=yes` 를 주고, 나머지
+VM 자체를 지웠다면 `gcloud compute instances create kna-wiki-vm --project=kna-wiki-a1b2 --zone=asia-northeast3-a` 에 `--disk=name=kna-wiki-vm-restored,boot=yes` 를 주고, 나머지
 옵션은 [03단계](03-vm.md)와 같게(`--machine-type=e2-medium`, `--address=<고정 IP>`, `--tags=http-server,https-server`,
 `--service-account=outline-vm@kna-wiki-a1b2.iam.gserviceaccount.com`, `--scopes=cloud-platform`) 새 VM 을 만든다. 고정 IP 는 예약해 둔 것을 그대로 쓰므로 DNS 는 바꾸지 않아도 된다.
 
@@ -248,7 +248,7 @@ gcloud compute resource-policies delete kna-daily-snapshot --project=kna-wiki-a1
 gcloud compute ssh kna-wiki-vm --project=kna-wiki-a1b2 --zone=asia-northeast3-a --command='sudo rm /etc/cron.d/outline-backup'
 ```
 
-이미 만든 스냅샷과 버킷의 덤프는 남는다. 스냅샷은 `gcloud compute snapshots delete`, 덤프는 30일 lifecycle 로 사라진다.
+이미 만든 스냅샷과 버킷의 덤프는 남는다. 스냅샷은 `gcloud compute snapshots delete <스냅샷 이름> --project=kna-wiki-a1b2`, 덤프는 30일 lifecycle 로 사라진다.
 
 ## 기록되는 것
 

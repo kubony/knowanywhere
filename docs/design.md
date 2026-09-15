@@ -22,7 +22,8 @@
    00단계가 고른 `language` 로 정한다.
 6. 원칙: *눈감고 자동화하지 않고 안내한다*. 돈이 드는 일, 데이터를 지우는 일, `~/.claude/CLAUDE.md`·`~/.claude.json` 을
    건드리는 일은 먼저 보여주고 확인받는다. 비밀값은 되풀이해 출력하지 않고, state 와 레포에 쓰지 않으며, 그것을 쓰는
-   머신의 `.env` 파일(mode 600)에만 둔다.
+   머신의 `.env` 파일(mode 600)에만 둔다. 사용자의 전역 gcloud 설정(`gcloud config set`)은 바꾸지 않고, gcloud 명령마다
+   `--project` 와 필요한 `--zone`, `--region` 을 붙인다.
 
 ## 2. 설치되는 구조
 
@@ -86,7 +87,7 @@ bridge/discord/                vendoring 한 Claude Code + Codex 용 Discord 브
 |---|---|---|---|
 | 00 | kna-00-start | 동의, 템플릿 언어, 모드(`fresh` \| `join`), 필수 도구 확인(gcloud, node ≥ 20, claude, git. 도메인 유무) | `mode`, `language`, `agent.name`, `prereqs.*`, `domain.kind` (`own` \| `sslip`) |
 | 01 | kna-01-gcp-account | GCP 계정과 $300 무료 크레딧 안내, `gcloud auth login`, 프로젝트 생성, 결제 연결, compute/storage/iam API 켜기 | `gcp.project_id`, `gcp.billing_account_last4`, `gcp.region`, `gcp.zone` |
-| 02 | kna-02-budget | 예산과 알림(권장, 건너뛸 수 있음) | `gcp.budget_usd` |
+| 02 | kna-02-budget | 예산과 알림(권장, 건너뛸 수 있음). 결제 계정의 통화를 확인해 그 통화로 만든다 | `gcp.budget` (`{amount, currency}` 또는 `null`) |
 | 03 | kna-03-vm | 프로젝트 역할 없는 전용 서비스 계정 `outline-vm` 생성, e2-medium VM(`outline-vm` 을 `--scopes=cloud-platform` 으로 붙인다), 고정 IP, 방화벽 80/443, 기본 설정(업데이트, 2 GB swap, docker) | `vm.name`, `vm.zone`, `vm.ip`, `vm.ssh_user`, `vm.service_account` |
 | 04 | kna-04-dns | 내 도메인의 A 레코드, 또는 `wiki-<ip>.sslip.io` 대안. 해석 결과 검증 | `wiki.host` |
 | 05 | kna-05-google-oauth | Google Cloud 콘솔: OAuth 동의 화면 + redirect `https://<host>/auth/google.callback` 인 web client. client id 는 state 로, secret 은 VM `.env` 에 바로 입력 | `oauth.client_id` |

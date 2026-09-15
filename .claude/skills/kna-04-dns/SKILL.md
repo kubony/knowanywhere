@@ -78,6 +78,8 @@ echo "wiki-$(echo 203.0.113.10 | tr . -).sslip.io"
 
 ## 검증
 
+검증 명령과 도구 호출의 출력은 요약하지 말고 fenced code block 으로 원문을 붙이고, 그 아래 한 줄로 기대 결과와 맞는지 판정한다.
+
 두 경로 공통이다. 아래 `wiki.example.com` 자리에 실제 호스트를 넣는다.
 
 ```bash
@@ -113,12 +115,14 @@ node -e "require('dns').promises.resolve4('wiki.example.com').then(a=>console.lo
 
 ## state에 쓸 것
 
+`state.mjs` 가 출력한 JSON 조각을 fenced code block 으로 그대로 보여준다.
+
 ```bash
 node .claude/skills/kna-status/state.mjs set '{"wiki":{"host":"wiki.example.com"}}'
 node .claude/skills/kna-status/state.mjs step 04 done
 ```
 
-sslip 이면 `{"wiki":{"host":"wiki-203-0-113-10.sslip.io"}}` 를 쓴다. 출력된 조각을 보여준다.
+sslip 이면 `{"wiki":{"host":"wiki-203-0-113-10.sslip.io"}}` 를 쓴다.
 
 ## 다음 단계
 

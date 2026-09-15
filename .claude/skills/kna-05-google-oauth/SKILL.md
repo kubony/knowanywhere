@@ -1,6 +1,6 @@
 ---
 name: kna-05-google-oauth
-description: knowanywhere 5단계에 쓴다(fresh 모드, kna-04-dns 뒤). Google Cloud 콘솔의 Google Auth Platform에서 OAuth 동의 화면(External)과 Web application client를 만들도록 클릭 경로를 안내하고, redirect URI `https://<wiki.host>/auth/google.callback` 을 Google에 실제로 물어 검증한다. client ID만 state에 쓰고, client secret은 6단계에서 VM의 install.sh 프롬프트에 직접 입력하게 한다.
+description: knowanywhere 5단계에 쓴다(fresh 모드, kna-04-dns 뒤). Google Cloud 콘솔의 Google Auth Platform에서 OAuth 동의 화면과 Web application client를 만들도록 클릭 경로를 안내하고(프로젝트의 parent 를 gcloud 로 확인해 조직 소속이면 Audience Internal, 아니면 External + Test users 를 권한다), redirect URI `https://<wiki.host>/auth/google.callback` 을 Google에 실제로 물어 검증한다. client ID만 state에 쓰고, client secret은 6단계에서 VM의 install.sh 프롬프트에 직접 입력하게 한다.
 ---
 
 # 05단계: Google 로그인(OAuth client)
@@ -35,10 +35,11 @@ node .claude/skills/kna-status/state.mjs get gcp.project_id
 
 ## 물을 것
 
-한 번에 하나씩 묻는다.
+세 가지는 서로 독립이라 기본값과 함께 한 번에 물어도 된다(CLAUDE.md 규칙 9).
 
 1. **관리자로 로그인할 Google 계정 종류.** 개인 `@gmail.com` 인가, Google Workspace(회사 도메인) 계정인가.
-   - Audience 선택이 달라진다(아래 2). 6단계에서 `--personal-gmail` 이 필요한지도 이것으로 정한다. Outline은
+   - Audience 권장은 계정 종류가 아니라 절차 0의 프로젝트 parent 로 정한다. Workspace 계정이어도 프로젝트가 조직
+     밖에 있으면 Internal 을 고를 수 없다. 6단계에서 `--personal-gmail` 이 필요한지는 이 답으로 정한다. Outline은
      개인 Gmail 로그인으로는 새 워크스페이스를 만들지 않기 때문이다. state 스키마에 이 키는 없으므로 기록하지
      않고, 6단계가 다시 묻는다.
 2. **앱 이름.** 기본 `knowanywhere wiki`. Google 로그인 화면에 보이는 이름이다.
@@ -46,9 +47,24 @@ node .claude/skills/kna-status/state.mjs get gcp.project_id
 
 ## 절차
 
-사람이 콘솔에서 클릭한다.
+0은 인스톨러가 gcloud 로 확인하고, 1부터는 사람이 콘솔에서 클릭한다.
 각 절을 안내하고 "끝났다"는 답을 받은 뒤 다음 절로 간다. 화면 이름은 2025년 개편 이후 콘솔 기준이다
 (예전 이름: APIs & Services → OAuth consent screen / Credentials).
+
+### 0. 프로젝트가 조직 소속인지 확인 (읽기 전용)
+
+Audience 를 권하기 전에 반드시 확인한다. 추측으로 Internal 을 권하지 않는다.
+
+```bash
+gcloud projects describe kna-wiki-a1b2 --format="value(parent.type,parent.id)"
+```
+
+| 출력 | 뜻 | 권할 Audience |
+|---|---|---|
+| `organization  123456789012` 또는 `folder  ...` | 프로젝트가 조직(Google Workspace) 아래에 있다 | **Internal**. 그 조직 계정만 로그인하고, Test users 등록과 "unverified app" 경고가 없다. 조직 밖 Gmail 사용자도 들여야 하면 External |
+| 빈 줄 | 조직이 없는 프로젝트다(개인 Gmail 계정이거나, Workspace 계정이지만 조직 없이 만들었다) | **External** + Test users(절 3). 콘솔에서 Internal 은 고를 수 없게 비활성이다 |
+
+출력을 fenced code block 으로 보여주고, 그 결과에 따른 권장을 한 줄로 말한다.
 
 ### 1. Google Auth Platform 열기
 
@@ -63,7 +79,7 @@ node .claude/skills/kna-status/state.mjs get gcp.project_id
 | 화면 | 입력 |
 |---|---|
 | App Information | App name: `knowanywhere wiki`, User support email: 지원 이메일 |
-| Audience | **External** (개인 Gmail이면 필수). Workspace 계정이면 **Internal** 도 된다. 그 조직 계정만 로그인할 수 있다 |
+| Audience | 절차 0의 결과대로. parent 가 `organization`/`folder` 면 **Internal** 권장, 비어 있으면 **External** (Internal 은 비활성) |
 | Contact Information | 알림 받을 이메일 |
 | Finish | Google API Services: User Data Policy 동의 체크 → **Continue** → **Create** |
 
@@ -102,6 +118,8 @@ node .claude/skills/kna-status/state.mjs get gcp.project_id
 
 ## 검증
 
+검증 명령과 도구 호출의 출력은 요약하지 말고 fenced code block 으로 원문을 붙이고, 그 아래 한 줄로 기대 결과와 맞는지 판정한다.
+
 1. 형식: 받은 값이 `.apps.googleusercontent.com` 으로 끝나고 공백이 없어야 한다.
 2. Google에 실제로 묻는다. 로그인 전에 client 존재 여부와 redirect URI 일치를 확인하는 요청이다:
 
@@ -134,12 +152,14 @@ node .claude/skills/kna-status/state.mjs get oauth.client_id
 
 ## state에 쓸 것
 
+`state.mjs` 가 출력한 JSON 조각을 fenced code block 으로 그대로 보여준다.
+
 ```bash
 node .claude/skills/kna-status/state.mjs set '{"oauth":{"client_id":"123456789012-abc123.apps.googleusercontent.com"}}'
 node .claude/skills/kna-status/state.mjs step 05 done
 ```
 
-helper가 출력한 JSON 조각을 사용자에게 보여준다. secret이나 JSON 파일 경로는 쓰지 않는다.
+secret이나 JSON 파일 경로는 쓰지 않는다.
 
 ## 다음 단계
 

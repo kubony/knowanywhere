@@ -25,6 +25,22 @@
 - **client secret 은 채팅에 붙여 넣지 않는다.** 대화 기록에 남는다. 06단계에서 내 터미널의 `install.sh` 프롬프트에
   직접 붙여 넣는다.
 
+## 0. 프로젝트가 조직 소속인지 확인
+
+동의 화면의 Audience 로 **Internal** 을 고를 수 있는지는 계정 종류가 아니라 프로젝트가 조직(Google Workspace) 아래에
+있는지로 정해진다. 인스톨러가 콘솔 안내 전에 확인한다.
+
+```bash
+gcloud projects describe kna-wiki-a1b2 --format="value(parent.type,parent.id)"
+```
+
+| 출력 | 뜻 | Audience |
+|---|---|---|
+| `organization  123456789012` (또는 `folder  ...`) | 조직 아래 프로젝트 | **Internal** 권장. 그 조직 계정만 로그인하고, 테스트 사용자 등록과 "unverified app" 경고가 없다 |
+| 빈 줄 | 조직이 없는 프로젝트 | **External** + 테스트 사용자(3절). Internal 은 콘솔에서 비활성이다 |
+
+Workspace 계정이어도 01단계에서 조직 없이 만든 프로젝트라면 빈 줄이 나오고 Internal 을 고를 수 없다.
+
 아래 메뉴와 버튼은 영어 이름으로 적었다. 콘솔을 한국어로 쓰면 같은 자리에 번역된 이름이 보인다. 화면 구성은
 2025년 개편 이후 기준이다(예전 이름: APIs & Services > OAuth consent screen / Credentials).
 
@@ -46,7 +62,7 @@ https://console.cloud.google.com/auth/overview?project=kna-wiki-a1b2
 | 칸 | 넣을 것 |
 |---|---|
 | **App Information** | App name: `knowanywhere wiki`(Google 로그인 화면에 보이는 이름). User support email: 내 계정 |
-| **Audience** | **External**. 개인 Gmail 이면 이것만 고를 수 있다. Workspace 계정이면 **Internal** 도 된다. Internal 은 그 조직 계정만 로그인할 수 있다 |
+| **Audience** | 0절 결과대로. 조직 아래 프로젝트면 **Internal**(그 조직 계정만 로그인), 조직이 없으면 **External** |
 | **Contact Information** | 알림을 받을 이메일 |
 | **Finish** | "Google API Services: User Data Policy" 동의에 체크 > **Continue** > **Create** |
 

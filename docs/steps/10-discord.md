@@ -60,7 +60,7 @@ cp .knowanywhere/bridge-persona.md ~/kna-bridge/persona.md
 인스톨러가 `.env` 에 `ALLOWED_USER_IDS`, `ALLOWED_CHANNEL_IDS`, `AGENT_NAME` 을 넣는다. `DISCORD_TOKEN` 은 내가 편집기로
 직접 넣는다(`nano ~/kna-bridge/.env`).
 
-VM 이면 인스톨러가 `gcloud compute ssh` 로 `kna-bot` 사용자, Node 22, 브리지 복사, `.env` 의 비밀이 아닌 값, Claude Code
+VM 이면 인스톨러가 `gcloud compute ssh kna-wiki-vm --project=P --zone=Z` 로 `kna-bot` 사용자, Node 22, 브리지 복사, `.env` 의 비밀이 아닌 값, Claude Code
 설치까지 한다. 그다음 내가 VM 에 들어가 세 가지를 한다.
 
 ```bash
@@ -101,7 +101,7 @@ unset OUTLINE_KEY
 # macOS
 launchctl print gui/$(id -u)/com.$(id -un).knowanywhere-bridge | grep -E '^\s*(state|pid) ='
 tail -n 30 ~/kna-bridge/logs/bridge.log
-# Linux, VM (VM 은 gcloud compute ssh ... --command 로)
+# Linux, VM (VM 은 gcloud compute ssh kna-wiki-vm --project=P --zone=Z --command='...' 로)
 systemctl is-active knowanywhere-bridge
 sudo journalctl -u knowanywhere-bridge -n 30 --no-pager
 ```

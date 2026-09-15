@@ -168,6 +168,8 @@ ls -l ~/.claude/CLAUDE.md.bak-* 2>/dev/null | tail -3
 
 ## 검증
 
+검증 명령과 도구 호출의 출력은 요약하지 말고 fenced code block 으로 원문을 붙이고, 그 아래 한 줄로 기대 결과와 맞는지 판정한다.
+
 ### 1. 블록이 하나만 있다
 
 ```bash
@@ -246,6 +248,8 @@ node .claude/skills/kna-09-persona/managed-block.mjs show --target ~/.claude/CLA
 
 ## state에 쓸 것
 
+`state.mjs` 가 출력한 JSON 조각을 fenced code block 으로 그대로 보여준다.
+
 ```bash
 H=.claude/skills/kna-status/state.mjs
 node $H set '{"agent":{"persona_written_at":"2026-09-15T09:40:00Z"}}'
@@ -255,7 +259,7 @@ node $H step 09 done
 
 `persona_written_at` 은 5에서 블록을 쓴 시각(`변경 없음` 이었으면 확인한 시각), UTC 로
 `date -u +%Y-%m-%dT%H:%M:%SZ`. `agent-add` 는 같은 `name` 과 `machine` 조합이 있으면 교체하므로 다시 실행해도 중복되지
-않는다. 도우미가 출력한 JSON 조각을 보여준다.
+않는다.
 
 ## 다음 단계
 

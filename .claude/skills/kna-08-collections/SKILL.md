@@ -33,7 +33,7 @@ node .claude/skills/kna-status/state.mjs get wiki.collections
 
 ## 물을 것
 
-한 번에 하나씩 묻는다.
+1과 2는 서로 독립이라 기본값과 함께 한 번에 물어도 된다(CLAUDE.md 규칙 9). 3의 yes 는 1과 2가 정해진 뒤 따로 받는다.
 먼저 절차 1의 목록을 본 뒤, 이미 있는 것은 묻지 않는다.
 
 1. **공유 콜렉션 이름** (공유 콜렉션이 아직 없을 때만). 기본값은 `language` 가 `ko` 면 `공유 지식`, `en` 이면
@@ -123,6 +123,8 @@ Sessions 문서 제목은 `YYYY-MM-DD · …` 라서 제목 내림차순이 최�
 
 ## 검증
 
+검증 명령과 도구 호출의 출력은 요약하지 말고 fenced code block 으로 원문을 붙이고, 그 아래 한 줄로 기대 결과와 맞는지 판정한다.
+
 `list_collections`(`limit: 100`)를 다시 호출해 두 콜렉션에 대해 다음을 사용자에게 보여준다.
 
 | 항목 | 기대 |
@@ -144,6 +146,8 @@ join 모드에서 이미 있던 콜렉션을 기록만 한 경우에는 `permiss
 
 ## state에 쓸 것
 
+`state.mjs` 가 출력한 JSON 조각을 fenced code block 으로 그대로 보여준다.
+
 `set` 은 배열을 통째로 바꾼다. `wiki.collections.sessions` 에 이미 있는 항목(다른 에이전트)을 그대로 두고 이
 에이전트의 항목만 더한 전체 배열을 쓴다. 같은 `agent` 항목이 이미 있으면 그 항목을 바꾼다.
 
@@ -153,7 +157,7 @@ node .claude/skills/kna-status/state.mjs step 08 done
 node .claude/skills/kna-status/state.mjs get wiki.collections
 ```
 
-helper가 출력한 JSON 조각을 보여준다. `.knowanywhere/render/` 와 `.knowanywhere/render.sh` 는 지워도 되고 남겨도
+`.knowanywhere/render/` 와 `.knowanywhere/render.sh` 는 지워도 되고 남겨도
 된다(비밀값이 없고 커밋되지 않는다).
 
 ## 다음 단계
