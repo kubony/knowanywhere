@@ -67,8 +67,12 @@ function load() {
 
 function save(state) {
   fs.mkdirSync(DIR, { recursive: true, mode: 0o700 });
+  // 이전 버전이 0644 로 만든 파일은 먼저 0600 으로 좁힌다. 아래 쓰기가 실패해도 옛 파일이 0644 로 남지 않게 한다.
+  if (fs.existsSync(FILE)) fs.chmodSync(FILE, 0o600);
   const tmp = `${FILE}.tmp-${process.pid}`;
-  fs.writeFileSync(tmp, JSON.stringify(state, null, 2) + '\n');
+  fs.writeFileSync(tmp, JSON.stringify(state, null, 2) + '\n', { mode: 0o600 });
+  // umask 가 mode 를 더 좁힐 수는 있어도 넓히지는 못하므로, 명시적으로 0600 을 맞춘다.
+  fs.chmodSync(tmp, 0o600);
   fs.renameSync(tmp, FILE);
 }
 
@@ -90,6 +94,16 @@ function guard(value, where = '') {
   } else if (typeof value === 'string' && SECRET_VALUE.some((re) => re.test(value))) {
     die(`거부: "${where}" 의 값이 비밀값처럼 보인다(값은 출력하지 않는다). 비밀값은 state 에 쓰지 않는다.`, 2);
   }
+}
+
+// gcp.budget 은 null 이거나 {"amount": 양수, "currency": "KRW" 같은 ISO 4217 코드} 여야 한다(docs/state.md).
+function checkBudget(patch) {
+  if (!isObj(patch.gcp) || !('budget' in patch.gcp)) return;
+  const b = patch.gcp.budget;
+  if (b === null) return;
+  const ok = isObj(b) && typeof b.amount === 'number' && b.amount > 0
+    && typeof b.currency === 'string' && /^[A-Z]{3}$/.test(b.currency);
+  if (!ok) die('gcp.budget 은 null 이거나 {"amount": 양수, "currency": "USD"} 모양이어야 한다');
 }
 
 function merge(target, patch) {
@@ -145,7 +159,10 @@ switch (cmd) {
     try { patch = JSON.parse(args[0]); } catch (e) { die(`JSON 이 올바르지 않다: ${e.message}`); }
     if (!isObj(patch)) die('set 에는 JSON 객체가 필요하다');
     guard(patch);
+    checkBudget(patch);
     const s = merge(requireState(), patch);
+    // gcp.budget 이 옛 키 gcp.budget_usd 를 대신한다. 새 키를 쓰면 옛 키를 지운다.
+    if (isObj(patch.gcp) && 'budget' in patch.gcp && isObj(s.gcp)) delete s.gcp.budget_usd;
     save(s);
     console.log(JSON.stringify(patch, null, 2));
     break;

@@ -356,6 +356,8 @@ drop-in 이 적용되지 않았다. `systemctl cat knowanywhere-bridge` 로 drop
 
 ## 검증
 
+검증 명령과 도구 호출의 출력은 요약하지 말고 fenced code block 으로 원문을 붙이고, 그 아래 한 줄로 기대 결과와 맞는지 판정한다.
+
 서비스 상태와 로그를 보여준다.
 
 | 위치 | 상태 | 로그 |
@@ -393,6 +395,8 @@ drop-in 이 적용되지 않았다. `systemctl cat knowanywhere-bridge` 로 drop
 
 ## state에 쓸 것
 
+`state.mjs` 가 출력한 JSON 조각을 fenced code block 으로 그대로 보여준다.
+
 설치했을 때(`host` 는 `vm` 또는 이 머신의 이름):
 
 ```bash
@@ -415,7 +419,6 @@ node .claude/skills/kna-status/state.mjs step 10 skipped
 ```
 
 토큰, API key, 그 끝자리, Discord id 는 state 에 쓰지 않는다(id 는 비밀값은 아니지만 이 머신의 `.env` 에 이미 있다).
-도우미가 출력한 JSON 조각을 보여준다.
 
 ## 다음 단계
 

@@ -10,13 +10,15 @@
   자기 state 파일(`mode: "join"`)을 갖는다.
 - **원자적으로 쓴다.** 같은 디렉터리의 임시 파일에 쓴 뒤 `state.json` 위로 rename 한다. 쓰는 도중 멈춰도 옛 파일이나
   새 파일 둘 중 하나만 남고, 반쯤 쓴 파일은 남지 않는다.
+- **본인만 읽는다.** 파일은 mode 0600, 디렉터리 `.knowanywhere/` 는 0700 이다. 비밀값은 없지만 프로젝트 ID, IP, 콜렉션
+  id 가 들어 있어 같은 머신의 다른 사용자에게 보일 이유가 없다. 도우미는 쓸 때마다 모드를 0600 으로 맞춘다.
 - **모든 스킬은 state 를 먼저 읽는다.** 필요한 키가 없으면 빠진 키와 그 키를 쓰는 단계를 말하고 일찍 멈춘다.
 - **시각**은 UTC 의 ISO 8601 이다. 예: `2026-09-15T05:12:00Z`.
 
 ## 도우미
 
 `.claude/skills/kna-status/state.mjs`(Node 20 이상, 의존성 없음)가 위 규칙을 구현한다. 객체는 deep-merge 하고,
-배열과 스칼라는 통째로 바꾸고, 원자적으로 쓴다. 키 이름에 `secret`, `token`, `passw`, `private`, `api_key`, `hmac`,
+배열과 스칼라는 통째로 바꾸고, 원자적으로 mode 0600 으로 쓴다. 키 이름에 `secret`, `token`, `passw`, `private`, `api_key`, `hmac`,
 `credential` 이 들어 있거나 값이 알려진 비밀값 형식(Google OAuth client secret, GCS/AWS HMAC id, Discord bot token,
 private key 블록, JWT, 흔한 API 키 접두사)처럼 보이면 쓰지 않고 exit code 2 로 끝난다. 거부할 때도 값은 출력하지 않는다.
 
@@ -54,7 +56,7 @@ node $H status                                 # 표. 기계가 읽을 출력은
 | `gcp.billing_account_last4` | string | 01 | 결제 계정 id 의 끝 4자리만 |
 | `gcp.region` | string | 01 | 예: `asia-northeast3` |
 | `gcp.zone` | string | 01 | 예: `asia-northeast3-a` |
-| `gcp.budget_usd` | number \| `null` | 02 | 월 예산(USD, 결제 통화가 USD 가 아니면 환산값). 건너뛰면 `null` |
+| `gcp.budget` | `{amount, currency}` \| `null` | 02 | 만든 월 예산. `amount` 는 양수, `currency` 는 결제 계정의 통화 코드(ISO 4217, 예: `USD`, `KRW`)로 예산을 만든 값 그대로 쓰고 환산하지 않는다. 예: `{"amount": 27500, "currency": "KRW"}`. 건너뛰면 `null`. 도우미가 모양을 검사하고, 옛 키 `gcp.budget_usd` 가 있으면 이 키를 쓸 때 지운다 |
 | `vm.name` | string | 03 | 예: `kna-wiki-vm` |
 | `vm.zone` | string | 03 | VM 을 만든 zone |
 | `vm.ip` | string | 03 | 예약한 고정 외부 IP. 예: `203.0.113.10` |
@@ -114,7 +116,7 @@ node $H status                                 # 표. 기계가 읽을 출력은
     "billing_account_last4": "C3D4",
     "region": "asia-northeast3",
     "zone": "asia-northeast3-a",
-    "budget_usd": 40
+    "budget": { "amount": 40, "currency": "USD" }
   },
   "vm": {
     "name": "kna-wiki-vm",

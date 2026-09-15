@@ -142,6 +142,8 @@ node .claude/skills/kna-status/state.mjs mode fresh
 
 ## state에 쓸 것
 
+`state.mjs` 가 출력한 JSON 조각을 fenced code block 으로 그대로 보여준다.
+
 답과 확인한 버전을 `set` 한 번에 쓴다(버전은 출력된 그대로, 앞의 `v` 는 뺀다. 빠진 선택 도구는 `null`).
 `checked_at` 은 `date -u +%Y-%m-%dT%H:%M:%SZ` 의 출력이다.
 
@@ -161,9 +163,9 @@ node .claude/skills/kna-status/state.mjs set '{
 node .claude/skills/kna-status/state.mjs set '{"wiki":{"host":"wiki.example.com","url":"https://wiki.example.com"}}'
 ```
 
-도우미가 출력한 JSON 조각을 사용자에게 보여준다.
-
 ## 검증
+
+검증 명령과 도구 호출의 출력은 요약하지 말고 fenced code block 으로 원문을 붙이고, 그 아래 한 줄로 기대 결과와 맞는지 판정한다.
 
 ```bash
 node .claude/skills/kna-status/state.mjs status

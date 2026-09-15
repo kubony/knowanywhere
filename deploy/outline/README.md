@@ -53,17 +53,17 @@ gcloud storage buckets create "gs://$BACKUPS" --project "$PROJECT" --location "$
   --uniform-bucket-level-access --public-access-prevention
 
 # backups 버킷의 덤프는 30일이 지나면 사라진다.
-gcloud storage buckets update "gs://$BACKUPS" --lifecycle-file=deploy/outline/lifecycle-30d.json
+gcloud storage buckets update "gs://$BACKUPS" --project "$PROJECT" --lifecycle-file=deploy/outline/lifecycle-30d.json
 
 # 브라우저가 uploads 버킷에 직접 올리므로, 위키 origin 을 허용하는 CORS 가 필요하다.
 mkdir -p .knowanywhere
 sed "s#https://wiki.example.com#https://$HOST#" deploy/outline/cors.json > .knowanywhere/cors.json
-gcloud storage buckets update "gs://$UPLOADS" --cors-file=.knowanywhere/cors.json
+gcloud storage buckets update "gs://$UPLOADS" --project "$PROJECT" --cors-file=.knowanywhere/cors.json
 
 # Outline 파일 저장소 전용 신원. uploads 버킷에만 권한을 준다.
 gcloud iam service-accounts create outline-storage --project "$PROJECT" \
   --display-name "Outline file storage"
-gcloud storage buckets add-iam-policy-binding "gs://$UPLOADS" \
+gcloud storage buckets add-iam-policy-binding "gs://$UPLOADS" --project "$PROJECT" \
   --member "serviceAccount:$SA" --role roles/storage.objectAdmin
 ```
 

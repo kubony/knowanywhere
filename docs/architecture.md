@@ -106,13 +106,17 @@ VM 을 24시간 돌릴 때의 대략적인 정가(월 USD, 2026년 기준)다. �
 ## 보안 메모
 
 - **로그인은 Google OAuth 만 쓴다.** 여기서 Outline 에는 로컬 비밀번호가 없다. 누가 로그인할 수 있는지는 두 곳에서
-  정한다. OAuth 동의 화면(Testing 모드에서는 등록한 테스트 사용자만 로그인할 수 있다, 05단계)과 Outline 자체의 보안
-  설정(허용 도메인, 초대)이다. 첫 배포 뒤 둘 다 확인한다.
+  정한다. OAuth 동의 화면(Internal 이면 그 조직 계정만, External 의 Testing 모드면 등록한 테스트 사용자만 로그인할 수
+  있다, 05단계)과 Outline 자체의 보안 설정(허용 도메인, 초대)이다. 첫 배포 뒤 둘 다 확인한다.
 - **SMTP 없음.** Outline 은 메일을 보내지 않는다. 초대 메일도, 이메일 알림도 없다. 새 사람은 허용된 Google 계정으로
   로그인해서 들어온다.
-- **방화벽.** 위키용으로는 TCP 80 과 443 만 연다. SSH(22)는 `default` 네트워크의 `default-allow-ssh` 규칙이 허용하고,
-  키는 `gcloud compute ssh` 가 관리한다. 더 조이려면 그 규칙의 소스를 Google IAP 대역 `35.235.240.0/20` 으로 좁히고
-  `gcloud compute ssh --tunnel-through-iap` 로 접속한다. Postgres 와 Redis 는 호스트에 포트를 열지 않는다.
+- **방화벽.** 위키용으로는 TCP 80 과 443 만 연다. Compute Engine API 를 켜면 만들어지는 `default` 네트워크에는 자동
+  규칙이 딸려 온다. 그중 `default-allow-rdp`(tcp:3389, 소스 `0.0.0.0/0`)는 Debian VM 에 쓸 데가 없으므로 03단계
+  끝에서 삭제를 제안한다(삭제라 yes 를 받는다). `default-allow-ssh`(tcp:22, 소스 `0.0.0.0/0`)는 인스톨러가
+  `gcloud compute ssh` 로 VM 을 설정할 때 쓰므로 기본으로 남긴다. 키는 `gcloud compute ssh` 가 관리한다. 더 조이려면
+  (선택) 그 규칙의 소스를 Google IAP 대역 `35.235.240.0/20` 으로 좁히고, 이후 모든 `gcloud compute ssh`·`scp` 에
+  `--tunnel-through-iap` 를 붙인다. 06·10·11단계의 명령에는 이 플래그가 없으므로 11단계까지 마친 뒤에 좁히기를 권한다.
+  명령은 `docs/steps/03-vm.md` 의 "SSH 를 IAP 로 좁히기 (선택)"에 있다. Postgres 와 Redis 는 호스트에 포트를 열지 않는다.
 - **비밀값은 한 파일에 있다.** VM 의 `/opt/outline/.env`(mode 600)에 `SECRET_KEY`, `UTILS_SECRET`, Postgres 비밀번호,
   HMAC 키 쌍, OAuth client secret 이 들어 있다. 모두 VM 에서 생성하거나 입력하고, `.knowanywhere/state.json`, 이 레포,
   커밋, 위키로 옮기지 않는다. `SECRET_KEY` 나 `UTILS_SECRET` 을 나중에 바꾸면 세션과 암호화된 데이터가 무효가 되므로

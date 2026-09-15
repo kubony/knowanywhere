@@ -90,6 +90,8 @@ claude mcp get outline
 
 ## 검증
 
+검증 명령과 도구 호출의 출력은 요약하지 말고 fenced code block 으로 원문을 붙이고, 그 아래 한 줄로 기대 결과와 맞는지 판정한다.
+
 MCP 도구 `list_collections` 를 호출한다(Claude Code에서의 이름은 `mcp__outline__list_collections`, 서버
 이름을 바꿨으면 그 이름). 결과의 콜렉션 이름 목록을 사용자에게 보여준다. 새 워크스페이스라면 비어 있거나
 기본 콜렉션 하나다. 에러 없이 목록이 돌아오는 것이 기준이다.
@@ -103,13 +105,14 @@ MCP 도구 `list_collections` 를 호출한다(Claude Code에서의 이름은 `m
 
 ## state에 쓸 것
 
+`state.mjs` 가 출력한 JSON 조각을 fenced code block 으로 그대로 보여준다.
+
 ```bash
 node .claude/skills/kna-status/state.mjs set '{"mcp":{"server_name":"outline","verified_at":"2026-09-15T08:30:00Z"}}'
 node .claude/skills/kna-status/state.mjs step 07 done
 ```
 
 `verified_at` 은 `list_collections` 가 성공한 시각(UTC)이다. 토큰, API key, 그 끝자리도 state에 쓰지 않는다.
-helper가 출력한 JSON 조각을 보여준다.
 
 ## 다음 단계
 

@@ -34,7 +34,8 @@ node .claude/skills/kna-status/state.mjs get backup
 
 ## 물을 것
 
-한 번에 하나씩 묻는다.
+1과 2는 서로 독립이라 기본값과 함께 한 번에 물어도 된다(CLAUDE.md 규칙 9). 3의 yes 는 1과 2로 명령을 확정한 뒤
+따로 받는다.
 
 1. **시각.** 기본값: 스냅샷 03:00, 덤프 03:30(둘 다 VM 시간대). 위키를 쓰지 않는 시간이면 된다. 덤프는 스냅샷보다
    늦게 둬서 두 작업이 디스크를 동시에 쓰지 않게 한다.
@@ -104,8 +105,8 @@ gcloud compute disks add-resource-policies kna-wiki-vm --project=kna-wiki-a1b2 -
 새 객체를 만드는 권한만 준다(기존 덤프를 읽거나, 덮어쓰거나, 지우지 못한다):
 
 ```bash
-gcloud storage buckets add-iam-policy-binding gs://kna-wiki-a1b2-backups --member=serviceAccount:outline-vm@kna-wiki-a1b2.iam.gserviceaccount.com --role=roles/storage.objectCreator
-gcloud storage buckets get-iam-policy gs://kna-wiki-a1b2-backups --format="table(bindings.role,bindings.members.list())" --flatten="bindings[]"
+gcloud storage buckets add-iam-policy-binding gs://kna-wiki-a1b2-backups --project=kna-wiki-a1b2 --member=serviceAccount:outline-vm@kna-wiki-a1b2.iam.gserviceaccount.com --role=roles/storage.objectCreator
+gcloud storage buckets get-iam-policy gs://kna-wiki-a1b2-backups --project=kna-wiki-a1b2 --format="table(bindings.role,bindings.members.list())" --flatten="bindings[]"
 ```
 
 `--member` 에는 `vm.service_account`(절차 1에서 확인한 email)를 넣는다. 둘째 명령의 출력에서
@@ -129,7 +130,7 @@ cron 은 VM 현지 시각으로 돌므로 `30 3` 은 현지 03:30 이다(`pg-bac
 
 ```bash
 gcloud compute ssh kna-wiki-vm --project=kna-wiki-a1b2 --zone=asia-northeast3-a --command='sudo /usr/local/bin/outline-pg-backup'
-gcloud storage ls -l gs://kna-wiki-a1b2-backups/postgres/
+gcloud storage ls -l gs://kna-wiki-a1b2-backups/postgres/ --project=kna-wiki-a1b2
 ```
 
 기대 출력: `OK local: /var/backups/outline/outline-<UTC 시각>.sql.gz (<바이트> bytes)`,
@@ -144,6 +145,8 @@ gcloud storage ls -l gs://kna-wiki-a1b2-backups/postgres/
 | `gcloud: command not found` | 절차 1의 `google-cloud-cli` 설치 |
 
 ## 검증
+
+검증 명령과 도구 호출의 출력은 요약하지 말고 fenced code block 으로 원문을 붙이고, 그 아래 한 줄로 기대 결과와 맞는지 판정한다.
 
 ```bash
 gcloud compute disks describe kna-wiki-vm --project=kna-wiki-a1b2 --zone=asia-northeast3-a --format="value(resourcePolicies.basename())"
@@ -160,6 +163,8 @@ gcloud compute snapshots list --project=kna-wiki-a1b2 --filter="sourceDisk~/kna-
 
 ## state에 쓸 것
 
+`state.mjs` 가 출력한 JSON 조각을 fenced code block 으로 그대로 보여준다.
+
 ```bash
 node .claude/skills/kna-status/state.mjs set '{"backup":{"snapshot_policy":"kna-daily-snapshot"}}'
 ```
@@ -171,7 +176,7 @@ node .claude/skills/kna-status/state.mjs set '{"backup":{"verified_at":"2026-09-
 node .claude/skills/kna-status/state.mjs step 11 done
 ```
 
-`verified_at` 은 둘 다 확인한 시각(UTC, `date -u +%Y-%m-%dT%H:%M:%SZ`)이다. helper가 출력한 JSON 조각을 보여준다.
+`verified_at` 은 둘 다 확인한 시각(UTC, `date -u +%Y-%m-%dT%H:%M:%SZ`)이다.
 
 ## 다음 단계
 

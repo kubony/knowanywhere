@@ -35,7 +35,8 @@ node .claude/skills/kna-status/state.mjs get language
 
 ## 물을 것
 
-한 번에 하나씩 묻는다.
+1~3은 서로 독립이라 기본값과 함께 한 번에 물어도 된다(CLAUDE.md 규칙 9). 4의 yes 는 1~3으로 명령을 확정한 뒤
+따로 받는다.
 
 1. **관리자 계정 종류**(5단계에서 들었으면 다시 묻지 않는다). 개인 `@gmail.com` 이면 install.sh에
    `--personal-gmail` 을 붙인다. Outline은 개인 Gmail 로그인으로 새 워크스페이스를 만들지 않기 때문이다.
@@ -60,7 +61,7 @@ gcloud iam service-accounts list --project=kna-wiki-a1b2 --filter="email:outline
 ```bash
 gcloud storage buckets create gs://kna-wiki-a1b2-uploads --project=kna-wiki-a1b2 --location=asia-northeast3 --uniform-bucket-level-access --public-access-prevention
 gcloud storage buckets create gs://kna-wiki-a1b2-backups --project=kna-wiki-a1b2 --location=asia-northeast3 --uniform-bucket-level-access --public-access-prevention
-gcloud storage buckets update gs://kna-wiki-a1b2-backups --lifecycle-file=deploy/outline/lifecycle-30d.json
+gcloud storage buckets update gs://kna-wiki-a1b2-backups --project=kna-wiki-a1b2 --lifecycle-file=deploy/outline/lifecycle-30d.json
 ```
 
 `409` 과 "already exists" 가 나오면 이름이 다른 사람 것이다. 뒤에 `-2` 같은 접미사를 붙여 다시 묻는다.
@@ -71,7 +72,7 @@ gitignore 대상인 `.knowanywhere/` 에 만든다(이 명령은 값을 state에
 
 ```bash
 mkdir -p .knowanywhere && node -e 'const fs=require("fs");fs.writeFileSync(".knowanywhere/cors.json",fs.readFileSync("deploy/outline/cors.json","utf8").replaceAll("https://wiki.example.com","https://"+process.argv[1]))' "$(node .claude/skills/kna-status/state.mjs get wiki.host | tr -d '"')" && cat .knowanywhere/cors.json
-gcloud storage buckets update gs://kna-wiki-a1b2-uploads --cors-file=.knowanywhere/cors.json
+gcloud storage buckets update gs://kna-wiki-a1b2-uploads --project=kna-wiki-a1b2 --cors-file=.knowanywhere/cors.json
 ```
 
 출력의 `origin` 이 `https://<wiki.host>` 인지 확인한다.
@@ -80,7 +81,7 @@ gcloud storage buckets update gs://kna-wiki-a1b2-uploads --cors-file=.knowanywhe
 
 ```bash
 gcloud iam service-accounts create outline-storage --project=kna-wiki-a1b2 --display-name="Outline file storage"
-gcloud storage buckets add-iam-policy-binding gs://kna-wiki-a1b2-uploads --member=serviceAccount:outline-storage@kna-wiki-a1b2.iam.gserviceaccount.com --role=roles/storage.objectAdmin
+gcloud storage buckets add-iam-policy-binding gs://kna-wiki-a1b2-uploads --project=kna-wiki-a1b2 --member=serviceAccount:outline-storage@kna-wiki-a1b2.iam.gserviceaccount.com --role=roles/storage.objectAdmin
 ```
 
 "does not exist" 가 나오면 새 계정이 아직 전파되지 않은 것이다. 30초 뒤 다시 한다.
@@ -127,8 +128,8 @@ install.sh가 순서대로 묻는 것:
 실패하면 스크립트가 출력한 원인 후보를 같이 본다: DNS(`dig +short wiki.example.com`), 방화벽 80/443,
 첫 부팅 마이그레이션 지연. install.sh는 다시 실행해도 안전하다. 생성된 secret은 다시 만들지 않고, 비어 있는
 secret만 다시 묻는다. HMAC 키를 여러 번 만들었으면 쓰지 않는 키를 정리하게 한다:
-`gcloud storage hmac list --project=kna-wiki-a1b2` 로 보고 `gcloud storage hmac update <accessId> --deactivate` 후
-`gcloud storage hmac delete <accessId>`.
+`gcloud storage hmac list --project=kna-wiki-a1b2` 로 보고 `gcloud storage hmac update <accessId> --project=kna-wiki-a1b2 --deactivate` 후
+`gcloud storage hmac delete <accessId> --project=kna-wiki-a1b2`.
 
 ### 6. 첫 로그인 (브라우저, 사람)
 
@@ -150,6 +151,8 @@ Settings → **Security** → **Require invites** 켜기, 로그아웃 후 **Con
 
 ## 검증
 
+검증 명령과 도구 호출의 출력은 요약하지 말고 fenced code block 으로 원문을 붙이고, 그 아래 한 줄로 기대 결과와 맞는지 판정한다.
+
 ```bash
 curl -sI https://wiki.example.com | head -1
 curl -s https://wiki.example.com/_health; echo
@@ -168,13 +171,15 @@ gcloud compute ssh kna-wiki-vm --project=kna-wiki-a1b2 --zone=asia-northeast3-a 
 
 ## state에 쓸 것
 
+`state.mjs` 가 출력한 JSON 조각을 fenced code block 으로 그대로 보여준다.
+
 ```bash
 node .claude/skills/kna-status/state.mjs set '{"wiki":{"url":"https://wiki.example.com","buckets":{"uploads":"kna-wiki-a1b2-uploads","backups":"kna-wiki-a1b2-backups"},"deployed_at":"2026-09-15T08:05:00Z"}}'
 node .claude/skills/kna-status/state.mjs step 06 done
 ```
 
 `deployed_at` 은 검증이 통과한 시각(UTC, `date -u +%Y-%m-%dT%H:%M:%SZ`)이다. 다시 배포하는 경우 기존 값을
-덮지 않는다. helper가 출력한 JSON 조각을 보여준다. HMAC access id와 secret 관련 값은 state에 쓰지 않는다
+덮지 않는다. HMAC access id와 secret 관련 값은 state에 쓰지 않는다
 (helper도 거부한다). 5단계에서 받은 client secret JSON 파일은 이제 지워도 된다고 알린다.
 
 ## 다음 단계

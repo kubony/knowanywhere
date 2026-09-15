@@ -35,7 +35,7 @@
 ```bash
 gcloud storage buckets create gs://kna-wiki-a1b2-uploads --project=kna-wiki-a1b2 --location=asia-northeast3 --uniform-bucket-level-access --public-access-prevention
 gcloud storage buckets create gs://kna-wiki-a1b2-backups --project=kna-wiki-a1b2 --location=asia-northeast3 --uniform-bucket-level-access --public-access-prevention
-gcloud storage buckets update gs://kna-wiki-a1b2-backups --lifecycle-file=deploy/outline/lifecycle-30d.json
+gcloud storage buckets update gs://kna-wiki-a1b2-backups --project=kna-wiki-a1b2 --lifecycle-file=deploy/outline/lifecycle-30d.json
 ```
 
 두 버킷 모두 비공개다. Outline 은 첨부 파일을 서명된 URL 로만 내준다.
@@ -45,14 +45,14 @@ gcloud storage buckets update gs://kna-wiki-a1b2-backups --lifecycle-file=deploy
 에 만들어 적용한다.
 
 ```bash
-gcloud storage buckets update gs://kna-wiki-a1b2-uploads --cors-file=.knowanywhere/cors.json
+gcloud storage buckets update gs://kna-wiki-a1b2-uploads --project=kna-wiki-a1b2 --cors-file=.knowanywhere/cors.json
 ```
 
 ## 2. 서비스 계정 (무료)
 
 ```bash
 gcloud iam service-accounts create outline-storage --project=kna-wiki-a1b2 --display-name="Outline file storage"
-gcloud storage buckets add-iam-policy-binding gs://kna-wiki-a1b2-uploads --member=serviceAccount:outline-storage@kna-wiki-a1b2.iam.gserviceaccount.com --role=roles/storage.objectAdmin
+gcloud storage buckets add-iam-policy-binding gs://kna-wiki-a1b2-uploads --project=kna-wiki-a1b2 --member=serviceAccount:outline-storage@kna-wiki-a1b2.iam.gserviceaccount.com --role=roles/storage.objectAdmin
 ```
 
 `outline-storage` 는 uploads 버킷에만 권한이 있다. 이 계정의 HMAC 키는 VM 의 `.env` 에 들어가므로, 키가 새더라도
@@ -107,7 +107,7 @@ gcloud compute ssh kna-wiki-vm --project=kna-wiki-a1b2 --zone=asia-northeast3-a 
 secret 은 다시 묻지 않는다.
 
 HMAC 키를 여러 번 만들었다면 쓰지 않는 키를 정리한다: `gcloud storage hmac list --project=kna-wiki-a1b2` 로 보고,
-`gcloud storage hmac update <accessId> --deactivate` 후 `gcloud storage hmac delete <accessId>`.
+`gcloud storage hmac update <accessId> --project=kna-wiki-a1b2 --deactivate` 후 `gcloud storage hmac delete <accessId> --project=kna-wiki-a1b2`.
 
 ## 5. 첫 로그인 (브라우저)
 

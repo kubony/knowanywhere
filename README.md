@@ -131,6 +131,11 @@ Outline 의 Markdown 가져오기를 쓸 수 있다. 설치를 마친 뒤 사본
 출력하지 않고, state 파일·이 레포·위키에 쓰지 않으며, 변수명과 끝 4자리로만 가리킨다.
 자세한 내용은 [docs/architecture.md](docs/architecture.md#보안-메모).
 
+## 검증 이력
+
+- 2026-09-15 · 새 GCP 프로젝트(Workspace 계정, 서울 리전, sslip.io)에서 00~04단계를 인스톨러로 실제 실행해 통과했다.
+  05~11단계는 로컬 Docker 스모크(Outline 1.10.1 기동, `/_health` 200)만 확인했고 실제 GCP 실행은 아직이다.
+
 ## 라이선스
 
 [MIT](LICENSE)
