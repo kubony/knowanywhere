@@ -105,7 +105,7 @@ node .claude/skills/kna-09-persona/managed-block.mjs render --template .knowanyw
 
 ### 3a. 이 머신에 설치
 
-레포 밖 `~/kna-bridge` 에 복사한다. 레포 안에서 돌리면 봇의 작업 디렉터리 위쪽에 이 레포의 `CLAUDE.md`(인스톨러 지침)가
+레포 밖 `~/kna-bridge` 에 복사한다. 레포 안에서 돌리면 봇의 작업 디렉터리 위쪽에 이 레포의 `AGENTS.md`(인스톨러 지침)가
 있어서 봇이 그것을 따른다. 복사할 경로를 보여주고 yes 를 받는다.
 
 ```bash

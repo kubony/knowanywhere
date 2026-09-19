@@ -33,7 +33,7 @@ node .claude/skills/kna-status/state.mjs get wiki.collections
 
 ## 물을 것
 
-1과 2는 서로 독립이라 기본값과 함께 한 번에 물어도 된다(CLAUDE.md 규칙 9). 3의 yes 는 1과 2가 정해진 뒤 따로 받는다.
+1과 2는 서로 독립이라 기본값과 함께 한 번에 물어도 된다(AGENTS.md 규칙 9). 3의 yes 는 1과 2가 정해진 뒤 따로 받는다.
 먼저 절차 1의 목록을 본 뒤, 이미 있는 것은 묻지 않는다.
 
 1. **공유 콜렉션 이름** (공유 콜렉션이 아직 없을 때만). 기본값은 `language` 가 `ko` 면 `공유 지식`, `en` 이면
