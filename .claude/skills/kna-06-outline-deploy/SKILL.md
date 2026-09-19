@@ -35,7 +35,7 @@ node .claude/skills/kna-status/state.mjs get language
 
 ## 물을 것
 
-1~3은 서로 독립이라 기본값과 함께 한 번에 물어도 된다(CLAUDE.md 규칙 9). 4의 yes 는 1~3으로 명령을 확정한 뒤
+1~3은 서로 독립이라 기본값과 함께 한 번에 물어도 된다(AGENTS.md 규칙 9). 4의 yes 는 1~3으로 명령을 확정한 뒤
 따로 받는다.
 
 1. **관리자 계정 종류**(5단계에서 들었으면 다시 묻지 않는다). 개인 `@gmail.com` 이면 install.sh에

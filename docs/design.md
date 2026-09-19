@@ -10,7 +10,7 @@
 ## 1. 목표 경험
 
 1. 사용자가 `git clone <repo> && cd knowanywhere && claude` 를 실행한다.
-2. 루트 `CLAUDE.md` 가 Claude 에게 `.knowanywhere/state.json` 을 읽게 한다(첫 실행에는 없다). Claude 는 무엇을 만들고
+2. 루트 `AGENTS.md` 가 Claude 에게 `.knowanywhere/state.json` 을 읽게 한다(첫 실행에는 없다). Claude 는 무엇을 만들고
    얼마가 드는지(GCP 무료 크레딧, 크레딧 뒤 e2-medium VM 한 대 월 약 $25 ~ 30)를 5 ~ 8줄로 설명하고 **시작할지 묻는다**.
    사용자가 yes 라고 하기 전에는 아무것도 실행하지 않는다.
 3. 단계 하나 = `.claude/skills/kna-NN-<slug>/SKILL.md` 스킬 하나. 단계는 (a) 목표와 선행 조건을 말하고, (b) 필요한 것을
@@ -61,7 +61,7 @@ later:     Codex (agent "B"), Hermes ┘
 ## 3. 레포 레이아웃
 
 ```
-CLAUDE.md                      인스톨러의 두뇌 (core)
+AGENTS.md                      인스톨러의 두뇌 (core)
 README.md (ko) / README.en.md  무엇을, 왜, 어떻게. 2분 안에 읽는다 (core)
 LICENSE                        MIT (core)
 docs/design.md                 이 파일

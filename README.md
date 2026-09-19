@@ -53,7 +53,7 @@ cd knowanywhere
 claude
 ```
 
-Claude 가 [`CLAUDE.md`](CLAUDE.md) 를 읽고 무엇을 만드는지, 비용이 얼마인지 설명한 뒤 "설치를 시작할까요?" 라고 묻는다.
+Claude 가 [`AGENTS.md`](AGENTS.md) 를 읽고 무엇을 만드는지, 비용이 얼마인지 설명한 뒤 "설치를 시작할까요?" 라고 묻는다.
 yes 라고 답하면 된다. 언제든 멈출 수 있고, 레포를 다시 열면 멈춘 곳부터 이어간다. 진행 상황은 `/kna-status` 로 본다.
 
 필요한 것: Google 계정과 Google Cloud 무료 체험에 등록할 카드, [Claude Code](https://claude.com/claude-code),

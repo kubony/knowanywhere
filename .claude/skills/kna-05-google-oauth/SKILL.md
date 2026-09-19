@@ -35,7 +35,7 @@ node .claude/skills/kna-status/state.mjs get gcp.project_id
 
 ## 물을 것
 
-세 가지는 서로 독립이라 기본값과 함께 한 번에 물어도 된다(CLAUDE.md 규칙 9).
+세 가지는 서로 독립이라 기본값과 함께 한 번에 물어도 된다(AGENTS.md 규칙 9).
 
 1. **관리자로 로그인할 Google 계정 종류.** 개인 `@gmail.com` 인가, Google Workspace(회사 도메인) 계정인가.
    - Audience 권장은 계정 종류가 아니라 절차 0의 프로젝트 parent 로 정한다. Workspace 계정이어도 프로젝트가 조직

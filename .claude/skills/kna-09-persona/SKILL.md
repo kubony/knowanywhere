@@ -189,7 +189,7 @@ node .claude/skills/kna-09-persona/managed-block.mjs show --target ~/.claude/CLA
 (cd "$(mktemp -d)" && claude -p '너의 에이전트 이름과 세션 기록 콜렉션 이름만 한 줄로 답하라.')
 ```
 
-기대: 출력에 `agent.name` 과 `<agent.name> Sessions` 가 들어 있다. 이 레포 안에서 돌리면 레포의 CLAUDE.md 가 섞이므로
+기대: 출력에 `agent.name` 과 `<agent.name> Sessions` 가 들어 있다. 이 레포 안에서 돌리면 레포의 AGENTS.md 가 섞이므로
 꼭 레포 밖에서 한다.
 
 ### 3. 스모크 테스트: 첫 세션 문서

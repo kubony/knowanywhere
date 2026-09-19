@@ -54,7 +54,7 @@ cd knowanywhere
 claude
 ```
 
-Claude reads [`CLAUDE.md`](CLAUDE.md), explains what will be built and what it costs, and asks whether to start the
+Claude reads [`AGENTS.md`](AGENTS.md), explains what will be built and what it costs, and asks whether to start the
 install. Say yes. Stop whenever you like; reopening the repo resumes where you left off. Type `/kna-status` at any
 time to see progress. The installer talks to you in the language you write in.
 
